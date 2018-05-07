@@ -1,15 +1,3 @@
-/* 
- * File:   test.c
- * Author: black
- *
- * Created on May 20, 2017, 10:34 AM
- */
-#include <stdio.h>
-#include <stdlib.h>
-#include "tetrisDrawer.h"
-#include "tetrisLogic.h"
-#include "inputHandler.h"
-
 // CONFIG
 #pragma config FOSC = HS        // Oscillator Selection bits (HS oscillator)
 #pragma config WDTE = OFF       // Watchdog Timer Enable bit (WDT disabled)
@@ -24,48 +12,54 @@
 // Use project enums instead of #define for ON and OFF.
 
 #include <xc.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "timer.h"
+#include "tetrisDrawer.h"
+#include "tetrisLogic.h"
+#include "inputHandler.h"
 
-int main(int argc, char** argv) {
-    ADCON1 = 0b11110111;
+void initializeRegisters() {
+    ADCON1 = 0b11110111; // All ports are digital
     
+    // Make everything an output
     TRISA = 0;
     TRISB = 0;
     TRISC = 0;
     TRISD = 0;
+    // Except PORTE.
+    // Note the other bits, as they are controlling an unrelated feature on 16f877a, that must be turned off
     TRISE = 0b00000111;
     
-    PORTA = 0b00000000;
-    PORTC = 0b00000000;
-    PORTD = 0b00000000;
-    
-    PORTB = 0b11111111;
-    
-    Timer timer;
-    initTimer(&timer);
+}
 
-    initMap();
+int main(int argc, char** argv) {
+    Timer restartTimer; // wait with the restart
+
+    initializeRegisters();
+    initTimer(&restartTimer);
+    initTetris();
     
     while (1) {
-        play();
-        unsigned char input = readInput();
+        updateTetris();
+        unsigned char input = readUserInput();
         switch (input) {
             case LEFT:
-                moveLeft();
+                moveCurrentShapeLeft();
                 break;
             case RIGHT:
-                moveRight();
+                moveCurrentShapeRight();
                 break;
-            case TURN:
-                rotate();
+            case ROTATE:
+                rotateCurrentShape();
                 break;
         }
         drawMap(hasCurrentShape, currentX, currentY, currentShape);
         if (hasGameEnded()) {
-            update(&timer);
-            if (isExpired(&timer, 3)) {
-                initMap();
-                initTimer(&timer);
+            updateTimer(&restartTimer);
+            if (hasTimerExpired(&restartTimer, 3)) {
+                initTetris();
+                initTimer(&restartTimer);
             }
         }
     }

@@ -5,13 +5,13 @@ void initTimer(Timer* timer) {
     timer->secondByte = 0;
 }
 
-char isExpired(Timer* timer, unsigned char a) {
+char hasTimerExpired(Timer* timer, unsigned char a) {
     return timer->secondByte >= a;
 }
 
-void update(Timer* timer) {
+void updateTimer(Timer* timer) {
     timer->firstByte += 1;
-    if (timer->firstByte >= 100) {
+    if (timer->firstByte >= 255) {
         timer->secondByte += 1;
         timer->firstByte = 0;
     }

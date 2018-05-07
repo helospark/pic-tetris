@@ -1,63 +1,59 @@
-/* 
- * File:   inputHandler.c
- * Author: root
- *
- * Created on May 6, 2018, 4:45 PM
- */
-
-#include <stdio.h>
-#include <stdlib.h>
 #include <xc.h>
 #include "inputHandler.h"
 
 #define LEFT_BIT_INDEX 0
 #define RIGHT_BIT_INDEX 1
-#define TURN_BIT_INDEX 2
+#define ROTATE_BIT_INDEX 2
+
+// Button pressed logic is inverted, since button pulls pin to ground
+#define BUTTON_PRESSED_STATE 0
 
 int lastButtonStates[3];
 
 int lastRead = 0;
 
-unsigned char readInput() {
+unsigned char readUserInput() {
     char leftBit = PORTEbits.RE0;
     char rightBit = PORTEbits.RE1;
-    char turnBit = PORTEbits.RE2;
-    char result = NO_INPUT; // just pressed result
-    char pressedKey = NO_INPUT; // holding it
+    char rotateBit = PORTEbits.RE2;
+    char justPressedResult = NO_INPUT;
+    char pressedAndHoldingResult = NO_INPUT;
     
-    if (leftBit == 0) {
-        pressedKey = LEFT;
+    if (leftBit == BUTTON_PRESSED_STATE) {
+        pressedAndHoldingResult = LEFT;
         if (lastButtonStates[LEFT_BIT_INDEX] != leftBit) {
-            result = LEFT;
+            justPressedResult = LEFT;
         }
     }
-    if (rightBit == 0) {
-        pressedKey = RIGHT;
+    if (rightBit == BUTTON_PRESSED_STATE) {
+        pressedAndHoldingResult = RIGHT;
         if (lastButtonStates[RIGHT_BIT_INDEX] != rightBit) {
-            result = RIGHT;
+            justPressedResult = RIGHT;
         }
     }
-    if (turnBit == 0) {
-        pressedKey = TURN;
-        if (lastButtonStates[TURN_BIT_INDEX] != turnBit) {
-            result = TURN;
+    if (rotateBit == BUTTON_PRESSED_STATE) {
+        pressedAndHoldingResult = ROTATE;
+        if (lastButtonStates[ROTATE_BIT_INDEX] != rotateBit) {
+            justPressedResult = ROTATE;
         }
     }
     
     lastButtonStates[LEFT_BIT_INDEX] = leftBit;
     lastButtonStates[RIGHT_BIT_INDEX] = rightBit;
-    lastButtonStates[TURN_BIT_INDEX] = turnBit;
+    lastButtonStates[ROTATE_BIT_INDEX] = rotateBit;
     
-    if (result != NO_INPUT) {
+    // if the user just pressed the button, act immediately
+    if (justPressedResult != NO_INPUT) {
         lastRead = 0;
-        return result;
+        return justPressedResult;
     }
     ++lastRead;
-    if (pressedKey != NO_INPUT && lastRead > 30) {
-        lastRead = 0;
-        return pressedKey;
-    }
     
+    // otherwise send it once per 20 updates
+    if (pressedAndHoldingResult != NO_INPUT && lastRead > 30) {
+        lastRead = 0;
+        return pressedAndHoldingResult;
+    }
     
     return NO_INPUT;
 }

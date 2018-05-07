@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include "tetrisLogic.h"
 #include "map.h"
 
@@ -7,7 +6,7 @@
 #define SHAPE_HOLDER_HEIGHT 2
 #define SHAPE_HOLDER_WIDTH 4
 
-unsigned char shapes[NUMBER_OF_SHAPES][8] = {
+unsigned char TETRIS_SHAPES[NUMBER_OF_SHAPES][8] = {
     {
        0,1,0,0,
        1,1,1,0
@@ -41,17 +40,17 @@ unsigned char shapes[NUMBER_OF_SHAPES][8] = {
 
 int lastUpdated;
 int currentDelay;
-char gameOver;
+char isGameOver;
 
-void initMap() {
+void initTetris() {
     for (int i = 0; i < HEIGHT; ++i) {
         for (int j = 0; j < WIDTH; ++j) {
-            set(i,j,0);
+            setMapValue(i, j, 0);
         }
     }
-    gameOver = 0;
+    isGameOver = 0;
     lastUpdated = 0;
-    currentDelay = 50;
+    currentDelay = 35;
     hasCurrentShape = 0;
 }
 
@@ -63,7 +62,7 @@ char chooseShape() {
     }
     
     int index = rand() % NUMBER_OF_SHAPES;
-    char* shape = shapes[index];
+    char* shape = TETRIS_SHAPES[index];
     int centerY = (CURRENT_BLOCK_HEIGHT - SHAPE_HOLDER_HEIGHT) / 2;
     int centerX = (CURRENT_BLOCK_WIDTH - SHAPE_HOLDER_WIDTH) / 2;
     for (int i = 0; i < SHAPE_HOLDER_HEIGHT; ++i) {
@@ -102,7 +101,7 @@ char hasCollision() {
                 if (mapCoordinateY < 0 || mapCoordinateY >= HEIGHT) {
                     return 1;
                 }
-                if (at(mapCoordinateY,mapCoordinateX)) {
+                if (mapValueAt(mapCoordinateY,mapCoordinateX)) {
                     return 1;
                 }
             }
@@ -117,17 +116,17 @@ void addShapeToMap() {
             if (currentShape[i][j]) {
                 char mapCoordinateX = currentX + j;
                 char mapCoordinateY = currentY + i;
-                set(mapCoordinateY, mapCoordinateX, 1);
+                setMapValue(mapCoordinateY, mapCoordinateX, 1);
             }
         }
     }
 }
 
-void rotateRight() {
+void rotateLeft() {
     char newShape[CURRENT_BLOCK_HEIGHT][CURRENT_BLOCK_WIDTH];
     for (int i = 0; i < CURRENT_BLOCK_HEIGHT; ++i) {
         for (int j = 0; j < CURRENT_BLOCK_WIDTH; ++j) {
-            newShape[j][CURRENT_BLOCK_WIDTH - 1 - i] = currentShape[i][j];
+            newShape[CURRENT_BLOCK_HEIGHT - 1 - j][i] = currentShape[i][j];
         }
     }
     for (int i = 0; i < CURRENT_BLOCK_HEIGHT; ++i) {
@@ -139,23 +138,25 @@ void rotateRight() {
 
 void destroyRowIfNeeded() {
     for (int i = currentY; i < currentY + CURRENT_BLOCK_HEIGHT && i < HEIGHT; ++i) {
-        if (isFullySet(i)) {
+        if (isRowFilledCompletely(i)) {
             moveRowsDown(i);
             --currentDelay;
+            if (currentDelay <= 0) {
+                currentDelay = 0;
+            }
         }
     }
 }
 
-void play() {
+void updateTetris() {
     ++lastUpdated;
-    if (lastUpdated > currentDelay) {
+    if (lastUpdated > currentDelay && !isGameOver) {
         if (!hasCurrentShape) {
             chooseShape();
             findCoordinates();
             if (hasCollision()) {
-                gameOver = 1;
+                isGameOver = 1;
             }
-            return;
         } else {
             ++currentY;
             if (hasCollision()) {
@@ -169,29 +170,38 @@ void play() {
     }
 }
 
-void moveLeft() {
+void moveCurrentShapeLeft() {
+    if (!hasCurrentShape) {
+        return;
+    }
     --currentX;
     if (hasCollision()) {
         ++currentX;
     }
 }
 
-void moveRight() {
+void moveCurrentShapeRight() {
+    if (!hasCurrentShape) {
+        return;
+    }
     ++currentX;
     if (hasCollision()) {
         --currentX;
     }
 }
 
-void rotate() {
-    rotateRight();
+void rotateCurrentShape() {
+    if (!hasCurrentShape) {
+        return;
+    }
+    rotateLeft();
     if (hasCollision()) {
         for (int i = 0; i < 3; ++i) {
-            rotateRight(); // restore shape
+            rotateLeft(); // restore original rotation the funny way
         }
     }
 }
 
 char hasGameEnded() {
-    return gameOver;
+    return isGameOver;
 }

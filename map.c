@@ -1,20 +1,13 @@
-/* 
- * File:   map.c
- * Author: root
- *
- * Created on May 6, 2018, 8:09 PM
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include "map.h"
 
-unsigned char at(int y, int x) {
+unsigned char mapValueAt(int y, int x) {
     unsigned char row = map.rows[y];
     return (row & (0b00000001 << x)) >> x;
 }
 
-void set(int y, int x, unsigned char value) {
+void setMapValue(int y, int x, unsigned char value) {
     if (value == 0) {
         map.rows[y] &= ~(0b00000001 << x);
     } else {
@@ -22,7 +15,7 @@ void set(int y, int x, unsigned char value) {
     }
 }
 
-char isFullySet(int y) {
+char isRowFilledCompletely(int y) {
     return map.rows[y] == 0b11111111;
 }
 

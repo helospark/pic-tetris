@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <xc.h>
 #include "global.h"
@@ -14,11 +13,14 @@
 typedef struct {
     unsigned char registerType;
     unsigned char index;
-} Register;
+} RowData;
 
-const unsigned char COLS[] = {4,5,3,6,0,2,1,7};
+// Mapping of column in PORTB
+// Means, that PORTB4 sets the first column, PORTB5 second, etc.
+const unsigned char COLS[] = {4, 5, 3, 6, 0, 2, 1, 7};
 
-const Register ROWS[] = {
+// Mapping of the rows, ex. PORTC3 sets the first row, etc.
+const RowData ROWS[] = {
     {PORTC_TYPE, 3},
     {PORTA_TYPE, 0},
     {PORTA_TYPE, 1},
@@ -42,22 +44,28 @@ void clearAll() {
     PORTC = 0b11111111;
     PORTD = 0b11111111;
 }
-
-void turnOnARow(int rowIndex, unsigned char* shape, int shapeStart) {
+// Multiplexing works by setting the value for the columns in PORTB, then turn on a single columns
+// Repeat for all rows fast
+// Using interrupts instead of update->render would clear up the display flickering a bit
+// but this method seems fine most of the time
+void turnOnARow(int rowIndex, unsigned char* shape) {
     unsigned char rowValue = 0;
     for (int i = 0; i < WIDTH; ++i) {
-        rowValue |= (at(rowIndex, i) & 1) << COLS[i];
+        rowValue |= (mapValueAt(rowIndex, i) & 1) << COLS[i];
     }
     if (shape != NULL) {
         for (int i = 0; i < CURRENT_BLOCK_WIDTH && (currentX + i) < WIDTH; ++i) {
             rowValue |= (shape[i] & 1) << COLS[currentX + i];
         }
     }
-    clearAll();
+    clearAll(); // we could also remember the last row turned on, but simpler this way
     PORTB = rowValue;
-    Register reg = ROWS[rowIndex];
-    unsigned char result = 0b00000001 << reg.index;
-    unsigned char type = reg.registerType;
+    RowData rowData = ROWS[rowIndex];
+    unsigned char result = 0b00000001 << rowData.index;
+    unsigned char type = rowData.registerType;
+    // Rows are splitted to separate ports, because of the limitation of the number
+    // of bits per port.
+    // Bits are inverted, since a LED is turned on if the bit is 0 on row 1 on column.
     switch (type) {
         case PORTA_TYPE:
             PORTA = ~result;
@@ -71,15 +79,14 @@ void turnOnARow(int rowIndex, unsigned char* shape, int shapeStart) {
     }
 }
 
-void drawMap(char hasShape, int currentX, int currentY, unsigned char shape[CURRENT_BLOCK_HEIGHT][CURRENT_BLOCK_WIDTH]) {
-    
+void drawMap() {
     for (int i = 0; i < HEIGHT; ++i) {
         unsigned char* shapeRow = NULL;
-        if (hasShape && i >= currentY && i < currentY + CURRENT_BLOCK_HEIGHT) {
-            shapeRow = shape[i - currentY];
+        if (hasCurrentShape && i >= currentY && i < currentY + CURRENT_BLOCK_HEIGHT) {
+            shapeRow = currentShape[i - currentY];
         }
-        turnOnARow(i, shapeRow, currentX);
+        turnOnARow(i, shapeRow);
     }
-    __delay_us(400);
+    __delay_us(400); // Make last row light up well
     PORTB = 0;
 }
