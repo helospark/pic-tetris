@@ -45,11 +45,11 @@ void clearAll() {
 
 void turnOnARow(int rowIndex, unsigned char* shape, int shapeStart) {
     unsigned char rowValue = 0;
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < WIDTH; ++i) {
         rowValue |= (at(rowIndex, i) & 1) << COLS[i];
     }
     if (shape != NULL) {
-        for (int i = 0; i < 4 && i < WIDTH; ++i) {
+        for (int i = 0; i < CURRENT_BLOCK_WIDTH && (currentX + i) < WIDTH; ++i) {
             rowValue |= (shape[i] & 1) << COLS[currentX + i];
         }
     }
@@ -71,11 +71,11 @@ void turnOnARow(int rowIndex, unsigned char* shape, int shapeStart) {
     }
 }
 
-void drawMap(char hasShape, int currentX, int currentY, unsigned char shape[4][4]) {
+void drawMap(char hasShape, int currentX, int currentY, unsigned char shape[CURRENT_BLOCK_HEIGHT][CURRENT_BLOCK_WIDTH]) {
     
     for (int i = 0; i < HEIGHT; ++i) {
         unsigned char* shapeRow = NULL;
-        if (hasShape && i >= currentY && i < currentY + 4) {
+        if (hasShape && i >= currentY && i < currentY + CURRENT_BLOCK_HEIGHT) {
             shapeRow = shape[i - currentY];
         }
         turnOnARow(i, shapeRow, currentX);

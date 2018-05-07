@@ -3,9 +3,11 @@
 #include "tetrisLogic.h"
 #include "map.h"
 
-#define NUMBER_OF_SHAPES 7;
+#define NUMBER_OF_SHAPES 7
+#define SHAPE_HOLDER_HEIGHT 2
+#define SHAPE_HOLDER_WIDTH 4
 
-unsigned char shapes[][8] = {
+unsigned char shapes[NUMBER_OF_SHAPES][8] = {
     {
        0,1,0,0,
        1,1,1,0
@@ -23,8 +25,8 @@ unsigned char shapes[][8] = {
        1,1,0,0
     },
     {
-       1,1,0,0,
-       1,1,0,0
+       0,1,1,0,
+       0,1,1,0
     },
     {
        1,1,1,0,
@@ -54,28 +56,43 @@ void initMap() {
 }
 
 char chooseShape() {
-    int index = rand() % NUMBER_OF_SHAPES;
-    char* shape = shapes[index];
-    for (int i = 0; i < 2; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            currentShape[i][j] = shape[i * 4 + j];
+    for (int i = 0; i < CURRENT_BLOCK_HEIGHT; ++i) {
+        for (int j = 0; j < CURRENT_BLOCK_WIDTH; ++j) {
+            currentShape[i][j] = 0;
         }
     }
-    for (int i = 0; i < 4; ++i) {
-        currentShape[2][i] = 0;
-        currentShape[3][i] = 0;
+    
+    int index = rand() % NUMBER_OF_SHAPES;
+    char* shape = shapes[index];
+    int centerY = (CURRENT_BLOCK_HEIGHT - SHAPE_HOLDER_HEIGHT) / 2;
+    int centerX = (CURRENT_BLOCK_WIDTH - SHAPE_HOLDER_WIDTH) / 2;
+    for (int i = 0; i < SHAPE_HOLDER_HEIGHT; ++i) {
+        for (int j = 0; j < SHAPE_HOLDER_WIDTH; ++j) {
+            currentShape[i + centerY][j + centerX] = shape[i * SHAPE_HOLDER_WIDTH + j];
+        }
     }
     hasCurrentShape = 1;
 }
 
+char findFirstRowWithValue() {
+    for (int i = 0; i < CURRENT_BLOCK_HEIGHT; ++i) {
+        for (int j = 0; j < CURRENT_BLOCK_WIDTH; ++j) {
+            if (currentShape[i][j]) {
+                return i;
+            }
+        }
+    }
+    return 0;
+}
+
 void findCoordinates() {
-    currentY = 0;
-    currentX = WIDTH / 2;    
+    currentY = findFirstRowWithValue() * -1;
+    currentX = (WIDTH - CURRENT_BLOCK_WIDTH) / 2;    
 }
 
 char hasCollision() {
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
+    for (int i = 0; i < CURRENT_BLOCK_HEIGHT; ++i) {
+        for (int j = 0; j < CURRENT_BLOCK_WIDTH; ++j) {
             if (currentShape[i][j]) {
                 char mapCoordinateX = currentX + j;
                 char mapCoordinateY = currentY + i;
@@ -95,8 +112,8 @@ char hasCollision() {
 }
 
 void addShapeToMap() {
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
+    for (int i = 0; i < CURRENT_BLOCK_HEIGHT; ++i) {
+        for (int j = 0; j < CURRENT_BLOCK_WIDTH; ++j) {
             if (currentShape[i][j]) {
                 char mapCoordinateX = currentX + j;
                 char mapCoordinateY = currentY + i;
@@ -107,21 +124,21 @@ void addShapeToMap() {
 }
 
 void rotateRight() {
-    char newShape[4][4];
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            newShape[j][3 - i] = currentShape[i][j];
+    char newShape[CURRENT_BLOCK_HEIGHT][CURRENT_BLOCK_WIDTH];
+    for (int i = 0; i < CURRENT_BLOCK_HEIGHT; ++i) {
+        for (int j = 0; j < CURRENT_BLOCK_WIDTH; ++j) {
+            newShape[j][CURRENT_BLOCK_WIDTH - 1 - i] = currentShape[i][j];
         }
     }
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
+    for (int i = 0; i < CURRENT_BLOCK_HEIGHT; ++i) {
+        for (int j = 0; j < CURRENT_BLOCK_WIDTH; ++j) {
             currentShape[i][j] = newShape[i][j];
         }
     }
 }
 
 void destroyRowIfNeeded() {
-    for (int i = currentY; i < currentY + 4 && i < HEIGHT; ++i) {
+    for (int i = currentY; i < currentY + CURRENT_BLOCK_HEIGHT && i < HEIGHT; ++i) {
         if (isFullySet(i)) {
             moveRowsDown(i);
             --currentDelay;

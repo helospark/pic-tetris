@@ -10,7 +10,7 @@
 
 int currentX = WIDTH / 2;
 int currentY = 0;
-char currentShape[4][4];
+char currentShape[CURRENT_BLOCK_HEIGHT][CURRENT_BLOCK_WIDTH];
 char hasCurrentShape = 0;
 
 

@@ -12,5 +12,8 @@
 #define HEIGHT 16
 #define _XTAL_FREQ 16000000
 
+#define CURRENT_BLOCK_WIDTH 6
+#define CURRENT_BLOCK_HEIGHT 6
+
 #endif
 

@@ -8,7 +8,7 @@
 #ifndef TETRISDRAWER_H
 #define	TETRISDRAWER_H
 
-void drawMap(char hasShape, int currentX, int currentY, unsigned char shape[4][4]);
+void drawMap(char hasShape, int currentX, int currentY, unsigned char shape[CURRENT_BLOCK_HEIGHT][CURRENT_BLOCK_WIDTH]);
 
 #endif	/* TETRISDRAWER_H */
 
