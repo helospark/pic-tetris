@@ -2,7 +2,9 @@
 
 Just a simple tetris game on PIC microcontroller written in C.
 
- [![Working](documentation/demonstration.gif)](https://www.youtube.com/watch?v=2a4rCOKGK_o)
+<a href="https://www.youtube.com/watch?v=2a4rCOKGK_o">
+    <img width="500" src="https://github.com/helospark/pic-tetris/raw/master/documentation/demonstration.gif">
+</a>
 
 ## Schematic
 
