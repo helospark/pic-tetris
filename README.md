@@ -2,6 +2,8 @@
 
 Just a simple tetris game on PIC microcontroller written in C.
 
+ [![Working](documentation/demonstration.gif)](https://www.youtube.com/watch?v=2a4rCOKGK_o)
+
 ## Schematic
 
 _Soon be uploaded_
